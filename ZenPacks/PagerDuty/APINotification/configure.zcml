@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:zcml="http://namespaces.zope.org/zcml">
+
+    <utility
+        factory=".actions.PagerDutyEventsAPIAction"
+        provides="Products.ZenModel.interfaces.IAction"
+        name="pagerduty"
+        />
+
+    <adapter provides=".interfaces.IPagerDutyEventsAPIActionContentInfo"
+             for="Products.ZenModel.NotificationSubscription.NotificationSubscription"
+             factory=".info.PagerDutyEventsAPIActionContentInfo"
+             />
+
+    <include package=".browser"/>
+
+    <include package="Products.ZenUtils.extdirect.zope" file="meta.zcml"/>
+
+    <browser:directRouter
+        name="pd_account_router"
+        for="*"
+        class=".routers.AccountRouter"
+        namespace="Zenoss.remote"
+        permission="zenoss.View"
+        />
+
+    <browser:directRouter
+        name="pd_services_router"
+        for="*"
+        class=".routers.ServicesRouter"
+        namespace="Zenoss.remote"
+        permission="zenoss.View"
+        />
+
+</configure>
+

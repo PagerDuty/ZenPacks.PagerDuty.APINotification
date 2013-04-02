@@ -1,0 +1,8 @@
+<tal:block metal:use-macro="here/page_macros/old-new">
+<tal:block metal:fill-slot="title">PagerDuty</tal:block>
+
+<tal:block metal:fill-slot="contentPane">
+<script src="/++resource++pagerduty/js/importPagerDutyServices.js"></script>
+<div id="import-pagerduty-services"></div>
+</tal:block>
+</tal:block>
