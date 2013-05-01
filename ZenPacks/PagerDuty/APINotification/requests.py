@@ -40,7 +40,7 @@ def _add_default_headers(req):
     for header,value in _DEFAULT_HEADERS.iteritems():
         req.add_header(header, value)
 
-def _invoke_pagerduty_resource_api(uri, headers, json_root, limit=None, offset=None):
+def _invoke_pagerduty_resource_api(uri, headers, json_root, timeout_seconds=None, limit=None, offset=None):
     """
     Calls the PagerDuty API at uri and paginates through all of the results.
     """
@@ -61,7 +61,7 @@ def _invoke_pagerduty_resource_api(uri, headers, json_root, limit=None, offset=N
     _add_default_headers(req)
 
     try:
-        f = urllib2.urlopen(req)
+        f = urllib2.urlopen(req, None, timeout_seconds)
     except urllib2.URLError as e:
         if hasattr(e, 'code'):
             if e.code == 401: # Unauthorized
@@ -105,7 +105,7 @@ def _invoke_pagerduty_resource_api(uri, headers, json_root, limit=None, offset=N
 
     if additionalResultsAvailable:
         newOffset = offset + limit
-        return resource + _invoke_pagerduty_resource_api(uri, headers, json_root, limit, newOffset)
+        return resource + _invoke_pagerduty_resource_api(uri, headers, json_root, timeout_seconds, limit, newOffset)
     else:
         return resource
 
@@ -117,7 +117,8 @@ def retrieve_services(account):
     uri = "https://%s.pagerduty.com/api/v1/services" % account.subdomain
     headers = {'Authorization': 'Token token=' + account.api_access_key}
     json_root = 'services'
-    all_services = _invoke_pagerduty_resource_api(uri, headers, json_root)
+    timeout_seconds = 10
+    all_services = _invoke_pagerduty_resource_api(uri, headers, json_root, timeout_seconds)
 
     services = []
     for svcDict in all_services:

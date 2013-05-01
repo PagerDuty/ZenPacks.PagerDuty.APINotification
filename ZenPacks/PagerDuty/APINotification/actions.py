@@ -53,6 +53,8 @@ NotificationProperties = enum(SERVICE_KEY='service_key', SUMMARY='summary', DESC
 REQUIRED_PROPERTIES = [NotificationProperties.SERVICE_KEY, NotificationProperties.SUMMARY,
                        NotificationProperties.DESCRIPTION, NotificationProperties.INCIDENT_KEY]
 
+API_TIMEOUT_SECONDS = 40
+
 class PagerDutyEventsAPIAction(IActionBase):
     implements(IAction)
 
@@ -133,7 +135,7 @@ class PagerDutyEventsAPIAction(IActionBase):
         headers = {'Content-Type' : 'application/json'}
         req = urllib2.Request(EVENT_API_URI, request_body, headers)
         try:
-            f = urllib2.urlopen(req)
+            f = urllib2.urlopen(req, None, API_TIMEOUT_SECONDS)
         except urllib2.URLError as e:
             if hasattr(e, 'reason'):
                 msg = 'Failed to contact the PagerDuty server: %s' % (e.reason)
