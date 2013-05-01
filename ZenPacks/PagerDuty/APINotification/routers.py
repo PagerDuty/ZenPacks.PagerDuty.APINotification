@@ -68,7 +68,7 @@ class AccountRouter(DirectRouter):
 
     def get_account_settings(self):
         """
-        Retrieves the account object.
+        Retrieves the account object from /zport/dmd/pagerduty_account.
         """
         dmdRoot = _dmdRoot(self.context)
         account = getattr(dmdRoot, ACCOUNT_ATTR, models.account.Account(None, None))
@@ -78,6 +78,9 @@ class AccountRouter(DirectRouter):
         """
         Saves the account object and returns a list of services associated
         with that account.  Returns nothing if invalid account info is set.
+
+        The account object is saved as /zport/dmd/pagerduty_account
+        (aka, dmdRoot.pagerduty_account)
         """
         account = models.account.Account(subdomain, api_access_key)
         dmdRoot = _dmdRoot(self.context)
@@ -98,7 +101,7 @@ class AccountRouter(DirectRouter):
 
 class ServicesRouter(DirectRouter):
     """
-    Simple router responsible for fetching the list of PagerDuty
+    Simple router responsible for fetching the list of services from PagerDuty.
     """
     def get_services(self, wants_messages=False):
         dmdRoot = _dmdRoot(self.context)

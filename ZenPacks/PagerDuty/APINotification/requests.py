@@ -111,8 +111,10 @@ def _invoke_pagerduty_resource_api(uri, headers, json_root, timeout_seconds=None
 
 def retrieve_services(account):
     """
-    Fetches the list of Generic API services for an account from the PagerDuty API
-    Returns a list of dictionaries where each dictionary represents one service object
+    Fetches the list of all services for an Account from the PagerDuty API.
+
+    Returns:
+        A list of Service objects.
     """
     uri = "https://%s.pagerduty.com/api/v1/services" % account.subdomain
     headers = {'Authorization': 'Token token=' + account.api_access_key}

@@ -30,8 +30,7 @@ import json
 
 class Account(object):
     """
-    A PagerDuty account consists of a subdomain, API access key, and
-    service list.
+    A PagerDuty account consists of a subdomain and API access key.
     """
     def __init__(self, subdomain, api_access_key):
         self.subdomain = subdomain
