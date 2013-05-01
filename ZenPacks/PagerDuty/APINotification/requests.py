@@ -67,7 +67,7 @@ def _invoke_pagerduty_resource_api(uri, headers, json_root, timeout_seconds=None
             if e.code == 401: # Unauthorized
                 raise InvalidTokenException()
             else:
-                msg = 'The PagerDuty server couldn\'t fulfill the request: HTTP %d' % (e.code)
+                msg = 'The PagerDuty server couldn\'t fulfill the request: HTTP %d (%s)' % (e.code, e.msg)
                 raise PagerDutyUnreachableException(msg)
         elif hasattr(e, 'reason'):
             msg = 'Failed to contact the PagerDuty server: %s' % (e.reason)

@@ -157,7 +157,7 @@ class PagerDutyEventsAPIAction(IActionBase):
                 msg = 'Failed to contact the PagerDuty server: %s' % (e.reason)
                 raise ActionExecutionException(msg)
             elif hasattr(e, 'code'):
-                msg = 'The PagerDuty server couldn\'t fulfill the request: HTTP %d' % (e.code)
+                msg = 'The PagerDuty server couldn\'t fulfill the request: HTTP %d (%s)' % (e.code, e.msg)
                 raise ActionExecutionException(msg)
             else:
                 raise ActionExecutionException('Unknown URLError occurred')
