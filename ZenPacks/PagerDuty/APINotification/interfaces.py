@@ -23,6 +23,24 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""
+Actions in Zenoss define their properties through their 'actionContentInfo'
+attribute. 'actionContentInfo' is a Zope interface which defines the names and
+types of the properties of the action. 'actionContentInfo' is used by the
+action to generate a block of JS that will render the action's content tab
+in the UI (see Products.ZenModel.interfaces.IAction.generateJavascriptContent).
+
+This module defines the Zope interface that is assigned to
+actions.PagerDutyEventsAPIAction.actionContentInfo.
+
+Other example Zope interfaces used to define action properties are:
+
+  * Products.Zuul.interfaces.actions.IEmailActionContentInfo
+  * Products.Zuul.interfaces.actions.IPageActionContentInfo
+  * Products.Zuul.interfaces.actions.ICommandActionContentInfo
+  * Products.Zuul.interfaces.actions.ISnmpTrapActionContentInfo
+"""
+
 import json
 
 from Products.Zuul.interfaces import IInfo
@@ -46,6 +64,14 @@ def _serialize(details):
     return [{u'key':a, u'value':b} for a,b in zip(details.keys(), details.values())] 
 
 class IPagerDutyEventsAPIActionContentInfo(IInfo):
+    """
+    Zope interface defining the names and types of the properties used by
+    actions.PagerDutyEventsAPIAction.
+
+    The "implementation" of this interface is defined in
+    info.PagerDutyEventsAPIActionContentInfo.
+    """
+
     service_key = SingleLineText(
         title       = _t(u'Service API Key'),
         description = _t(u'The API Key for the PagerDuty Service you want to alert.'),
@@ -68,7 +94,6 @@ class IPagerDutyEventsAPIActionContentInfo(IInfo):
         title       = _t(u'Incident Key'),
         description = _t(u'The incident key for the PagerDuty event.'),
         default     = u'${evt/evid}',
-        group       = _t(u'Advanced'),
     )
 
     details = schema.List(

@@ -53,7 +53,13 @@ NotificationProperties = enum(SERVICE_KEY='service_key', SUMMARY='summary', DESC
 REQUIRED_PROPERTIES = [NotificationProperties.SERVICE_KEY, NotificationProperties.SUMMARY,
                        NotificationProperties.DESCRIPTION, NotificationProperties.INCIDENT_KEY]
 
+API_TIMEOUT_SECONDS = 40
+
 class PagerDutyEventsAPIAction(IActionBase):
+    """
+    Derived class to contact PagerDuty's events API when a notification is
+    triggered.
+    """
     implements(IAction)
 
     id = 'pagerduty'
@@ -71,7 +77,7 @@ class PagerDutyEventsAPIAction(IActionBase):
 
     def execute(self, notification, signal):
         """
-        Perform an HTTP request to PagerDuty's Event API
+        Sets up the execution environment and POSTs to PagerDuty's Event API.
         """
         log.debug('Executing Pagerduty Events API action: %s', self.name)
         self.setupAction(notification.dmd)
@@ -83,16 +89,21 @@ class PagerDutyEventsAPIAction(IActionBase):
         else:
             eventType = EventType.TRIGGER
 
+        # Set up the TALES environment
+        environ = {'dmd': notification.dmd, 'env':None}
+
         actor = signal.event.occurrence[0].actor
+
         device = None
         if actor.element_uuid:
             device = self.guidManager.getObject(actor.element_uuid)
+        environ.update({'dev': device})
 
         component = None
         if actor.element_sub_uuid:
             component = self.guidManager.getObject(actor.element_sub_uuid)
+        environ.update({'component': component})
 
-        environ = {'dev': device, 'component': component, 'dmd': notification.dmd, 'env':None}
         data = _signalToContextDict(signal, self.options.get('zopeurl'), notification, self.guidManager)
         environ.update(data)
 
@@ -123,6 +134,13 @@ class PagerDutyEventsAPIAction(IActionBase):
         self._performRequest(body, environ)
 
     def _performRequest(self, body, environ):
+        """
+        Actually performs the request to PagerDuty's Event API.
+
+        Raises:
+            ActionExecutionException: Some error occurred while contacting
+            PagerDuty's Event API (e.g., API down, invalid service key).
+        """
         request_body = json.dumps(body)
 
         try:
@@ -133,13 +151,13 @@ class PagerDutyEventsAPIAction(IActionBase):
         headers = {'Content-Type' : 'application/json'}
         req = urllib2.Request(EVENT_API_URI, request_body, headers)
         try:
-            f = urllib2.urlopen(req)
+            f = urllib2.urlopen(req, None, API_TIMEOUT_SECONDS)
         except urllib2.URLError as e:
             if hasattr(e, 'reason'):
                 msg = 'Failed to contact the PagerDuty server: %s' % (e.reason)
                 raise ActionExecutionException(msg)
             elif hasattr(e, 'code'):
-                msg = 'The PagerDuty server couldn\'t fulfill the request: HTTP %d' % (e.code)
+                msg = 'The PagerDuty server couldn\'t fulfill the request: HTTP %d (%s)' % (e.code, e.msg)
                 raise ActionExecutionException(msg)
             else:
                 raise ActionExecutionException('Unknown URLError occurred')

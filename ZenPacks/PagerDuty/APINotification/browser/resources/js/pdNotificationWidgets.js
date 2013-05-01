@@ -2,6 +2,9 @@
     Ext.onReady(function() {
         var services_router = Zenoss.remote.ServicesRouter;
 
+        /**
+         * Frontend definition of a service
+         */
         Ext.define('pagerduty.model.Service', {
             extend: 'Ext.data.Model',
             fields: [
@@ -12,6 +15,21 @@
             ]
         });
 
+        /**
+         * UI control that allows selecting a particular PagerDuty service.
+         *
+         * This control shows both a combo box with a list of available
+         * services, as well as a text box containing just the service key.
+         *
+         * Editing the service key updates the combo box and selecting from
+         * the combo box updates the service key.
+         *
+         * The list of services in the combo box is dynamically populated by
+         * calling services_router.get_services, which in turn calls PagerDuty's
+         * service API.  If the request to PagerDuty's service API fails for
+         * any reason, the combo box is hidden and replaced with a text box
+         * detailing the error message (service_list_error).
+         */
         Ext.define('pagerduty.api.events.ServiceListWidget', {
             extend: 'Ext.container.Container',
             alias: 'widget.pagerduty-api-events-service-list',
@@ -145,6 +163,18 @@
 
         }); // Ext.define DetailsField
 
+        /**
+         * UI control to allow editing or arbitrary key/value pairs.
+         *
+         * This control just sets up an Ext.grid.Panel with a row editor
+         * attached to it.  The underlying store is a JSON store and we
+         * serialize it as a list of dictionaries to the hidden field named
+         * 'details'.  The serialization looks like:
+         *
+         * [{key:device, value:${evt/device},
+         *  {key:eventID, value:${evt/evid},
+         *  ... ]
+         */
         Ext.define('pagerduty.api.events.DetailsField', {
             extend: 'Ext.container.Container',
             alias: 'widget.pagerduty-api-events-details-field',

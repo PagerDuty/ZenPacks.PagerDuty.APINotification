@@ -36,6 +36,11 @@ from Products.Zuul.infos.actions import ActionFieldProperty
 from interfaces import IPagerDutyEventsAPIActionContentInfo
 
 class PagerDutyEventsAPIActionContentInfo(InfoBase):
+    """
+    Provides the "implementation" for IPagerDutyEventsAPIActionContentInfo.
+
+    Based on the definitions for the builtin actions in Products.Zuul.infos.actions.
+    """
     implements(IPagerDutyEventsAPIActionContentInfo)
     adapts(NotificationSubscription)
 

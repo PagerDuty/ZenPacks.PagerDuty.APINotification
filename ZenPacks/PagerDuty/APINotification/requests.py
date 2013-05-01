@@ -40,7 +40,7 @@ def _add_default_headers(req):
     for header,value in _DEFAULT_HEADERS.iteritems():
         req.add_header(header, value)
 
-def _invoke_pagerduty_resource_api(uri, headers, json_root, limit=None, offset=None):
+def _invoke_pagerduty_resource_api(uri, headers, json_root, timeout_seconds=None, limit=None, offset=None):
     """
     Calls the PagerDuty API at uri and paginates through all of the results.
     """
@@ -61,13 +61,13 @@ def _invoke_pagerduty_resource_api(uri, headers, json_root, limit=None, offset=N
     _add_default_headers(req)
 
     try:
-        f = urllib2.urlopen(req)
+        f = urllib2.urlopen(req, None, timeout_seconds)
     except urllib2.URLError as e:
         if hasattr(e, 'code'):
             if e.code == 401: # Unauthorized
                 raise InvalidTokenException()
             else:
-                msg = 'The PagerDuty server couldn\'t fulfill the request: HTTP %d' % (e.code)
+                msg = 'The PagerDuty server couldn\'t fulfill the request: HTTP %d (%s)' % (e.code, e.msg)
                 raise PagerDutyUnreachableException(msg)
         elif hasattr(e, 'reason'):
             msg = 'Failed to contact the PagerDuty server: %s' % (e.reason)
@@ -105,19 +105,22 @@ def _invoke_pagerduty_resource_api(uri, headers, json_root, limit=None, offset=N
 
     if additionalResultsAvailable:
         newOffset = offset + limit
-        return resource + _invoke_pagerduty_resource_api(uri, headers, json_root, limit, newOffset)
+        return resource + _invoke_pagerduty_resource_api(uri, headers, json_root, timeout_seconds, limit, newOffset)
     else:
         return resource
 
 def retrieve_services(account):
     """
-    Fetches the list of Generic API services for an account from the PagerDuty API
-    Returns a list of dictionaries where each dictionary represents one service object
+    Fetches the list of all services for an Account from the PagerDuty API.
+
+    Returns:
+        A list of Service objects.
     """
     uri = "https://%s.pagerduty.com/api/v1/services" % account.subdomain
     headers = {'Authorization': 'Token token=' + account.api_access_key}
     json_root = 'services'
-    all_services = _invoke_pagerduty_resource_api(uri, headers, json_root)
+    timeout_seconds = 10
+    all_services = _invoke_pagerduty_resource_api(uri, headers, json_root, timeout_seconds)
 
     services = []
     for svcDict in all_services:
