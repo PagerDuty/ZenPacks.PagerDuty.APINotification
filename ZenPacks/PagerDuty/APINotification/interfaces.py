@@ -68,7 +68,6 @@ class IPagerDutyEventsAPIActionContentInfo(IInfo):
         title       = _t(u'Incident Key'),
         description = _t(u'The incident key for the PagerDuty event.'),
         default     = u'${evt/evid}',
-        group       = _t(u'Advanced'),
     )
 
     details = schema.List(
