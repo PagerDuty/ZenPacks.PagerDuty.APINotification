@@ -141,12 +141,7 @@ class PagerDutyEventsAPIAction(IActionBase):
             ActionExecutionException: Some error occurred while contacting
             PagerDuty's Event API (e.g., API down, invalid service key).
         """
-        request_body = json.dumps(body)
-
-        try:
-            request_body = processTalSource(request_body, **environ)
-        except Exception:
-            raise ActionExecutionException('Unable to perform TALES evaluation on "%s" -- is there an unescaped $?' % request_body)
+        request_body = json.dumps(self._processTalExpressions(body, environ))
 
         headers = {'Content-Type' : 'application/json'}
         req = urllib2.Request(EVENT_API_URI, request_body, headers)
@@ -164,6 +159,20 @@ class PagerDutyEventsAPIAction(IActionBase):
 
         response = f.read()
         f.close()
+
+    def _processTalExpressions(self, data, environ):
+        if type(data) is str or type(data) is unicode:
+            try:
+                return processTalSource(data, **environ)
+            except Exception:
+                raise ActionExecutionException(
+                    'Unable to perform TALES evaluation on "%s" -- is there an unescaped $?' % data)
+        elif type(data) is list:
+            return [self._processTalExpressions(e, environ) for e in data]
+        elif type(data) is dict:
+            return dict([(k, self._processTalExpressions(v, environ)) for (k, v) in data.iteritems()])
+        else:
+            return data
 
     def updateContent(self, content=None, data=None):
         updates = dict()
