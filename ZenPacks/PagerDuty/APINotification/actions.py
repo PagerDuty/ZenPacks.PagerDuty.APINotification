@@ -162,6 +162,8 @@ class PagerDutyEventsAPIAction(IActionBase):
 
     def _processTalExpressions(self, data, environ):
         if type(data) is str or type(data) is unicode:
+            if '${' not in data:
+                return data
             try:
                 return processTalSource(data, **environ)
             except Exception:
