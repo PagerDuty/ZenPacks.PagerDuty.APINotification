@@ -31,6 +31,11 @@ import urllib2
 from types import DictType, ListType
 from models.service import Service
 
+from ZenPacks.PagerDuty.APINotification.constants import SUPPORTED_VERSIONS
+
+import logging
+log = logging.getLogger('zen.PagerDuty.ServicesRouter')
+
 class InvalidTokenException(Exception): pass
 class PagerDutyUnreachableException(Exception): pass
 class ParseException(Exception): pass
@@ -40,19 +45,12 @@ def _add_default_headers(req):
     for header,value in _DEFAULT_HEADERS.iteritems():
         req.add_header(header, value)
 
-def _invoke_pagerduty_resource_api(uri, headers, json_root, timeout_seconds=None, limit=None, offset=None):
+def _invoke_pagerduty_resource_api(uri, headers, json_root, params={}, timeout_seconds=None):
     """
     Calls the PagerDuty API at uri and paginates through all of the results.
     """
-    params = {}
-    if offset is not None:
-        params.update({'offset': offset})
-
-    if limit is not None:
-        params.update({'limit': limit})
-
     uri_parts = list(urlparse.urlparse(uri))
-    uri_parts[4] = urllib.urlencode(params)
+    uri_parts[4] = urllib.urlencode(params, True)
     query_uri = urlparse.urlunparse(uri_parts)
 
     req = urllib2.Request(query_uri)
@@ -94,20 +92,35 @@ def _invoke_pagerduty_resource_api(uri, headers, json_root, timeout_seconds=None
     if type(resource) is not ListType:
         raise ParseException("'%s' is not a list" % json_root)
 
-    total = response.get('total')
     limit = response.get('limit')
     offset = response.get('offset')
+    more = response.get('more')
 
-    if (total is None or limit is None or offset is None):
-        return resource
-
-    additionalResultsAvailable = int(total) > (int(offset) + int(limit))
-
-    if additionalResultsAvailable:
+    if more:
         newOffset = offset + limit
-        return resource + _invoke_pagerduty_resource_api(uri, headers, json_root, timeout_seconds, limit, newOffset)
+        params.update({'limit': limit, 'offset': newOffset})
+        return resource + _invoke_pagerduty_resource_api(uri, headers, json_root, params, timeout_seconds)
     else:
         return resource
+
+def _valid_service(service):
+    return ('id' in service
+        and 'name' in service
+        and 'integrations' in service
+        and len(service['integrations']) > 0)
+
+def _get_zenoss_integration(service):
+    for integration in service['integrations']:
+        if ('vendor' not in integration
+            or integration['vendor'] is None
+            or 'summary' not in integration['vendor']):
+            continue
+
+        for version in SUPPORTED_VERSIONS:
+            if integration['vendor']['summary'] == 'Zenoss %s' % version:
+                return integration
+
+    return False
 
 def retrieve_services(account):
     """
@@ -116,22 +129,28 @@ def retrieve_services(account):
     Returns:
         A list of Service objects.
     """
-    uri = "https://%s.pagerduty.com/api/v1/services" % account.subdomain
-    headers = {'Authorization': 'Token token=' + account.api_access_key}
+    uri = "https://api.pagerduty.com/services"
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token token=' + account.api_access_key,
+        'Accept': 'application/vnd.pagerduty+json;version=2'
+    }
     json_root = 'services'
     timeout_seconds = 10
-    all_services = _invoke_pagerduty_resource_api(uri, headers, json_root, timeout_seconds)
+    params = {'include[]': 'integrations', 'sort_by': 'name:desc'}
+    all_services = _invoke_pagerduty_resource_api(uri, headers, json_root, params, timeout_seconds)
 
     services = []
     for svcDict in all_services:
-        if ('name' in svcDict
-            and 'id' in svcDict
-            and 'service_key' in svcDict
-            and 'type' in svcDict):
+        if (_valid_service(svcDict)):
+            integration = _get_zenoss_integration(svcDict)
+            if integration == False:
+                continue
+
             service = Service(name=svcDict['name'],
                               id=svcDict['id'],
-                              service_key=svcDict['service_key'],
-                              type=svcDict['type'])
+                              type=svcDict['type'],
+                              service_key=integration['integration_key'])
             services.append(service)
 
     return services
