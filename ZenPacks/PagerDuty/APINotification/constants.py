@@ -7,6 +7,6 @@ EventType = enum(TRIGGER='trigger', ACKNOWLEDGE='acknowledge', RESOLVE='resolve'
 Properties = enum(SERVICE_KEY='service_key', SUMMARY='summary', DESCRIPTION='description',
                   INCIDENT_KEY='incident_key', DETAILS='details')
 
-SUPPORTED_VERSIONS = ['3', '4', '5']
+SUPPORTED_VERSIONS = ['4', '5']
 
 REQUIRED_PROPERTIES = [Properties.SERVICE_KEY, Properties.SUMMARY, Properties.DESCRIPTION, Properties.INCIDENT_KEY]
