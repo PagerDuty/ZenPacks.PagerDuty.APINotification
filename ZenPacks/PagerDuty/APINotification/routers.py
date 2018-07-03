@@ -46,7 +46,7 @@ def _success(model_obj, msg=None):
 def _retrieve_services(account):
     log.info("Fetching list of PagerDuty services for %s..." % account.fqdn())
     try:
-        all_services = requests.retrieve_services(account)
+        services = requests.retrieve_services(account)
 
     except requests.InvalidTokenException as e:
         log.warn("Token rejected")
@@ -58,9 +58,8 @@ def _retrieve_services(account):
         log.warn(e.message)
         raise
 
-    api_services = [service for service in all_services if service.type == Service.Type.GenericAPI]
-    log.info("Found %d services for %s" % (len(api_services), account.fqdn()))
-    return api_services
+    log.info("Found %d services for %s" % (len(services), account.fqdn()))
+    return services
 
 class AccountRouter(DirectRouter):
     def __init__(self, context, request=None):
