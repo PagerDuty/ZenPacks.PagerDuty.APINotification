@@ -1,9 +1,50 @@
 ZenPack.PagerDuty.APINotification
 =================================
 
-The official PagerDuty ZenPack extends Zenoss 4 by providing a new PagerDuty notification type that allows you to easily select which PagerDuty services you want Zenoss to send events to.
+The official PagerDuty ZenPack extends Zenoss 4 and 5 by providing a new PagerDuty notification type that allows you to easily select which PagerDuty services you want Zenoss to send events to.
 
-The [integration guide](http://www.pagerduty.com/docs/guides/zenoss-4-integration-guide/) provides additional details.
+# Integration guides
+
+* [Zenoss 4](https://www.pagerduty.com/docs/guides/zenoss-4-integration-guide/)
+* [Zenoss 5](https://www.pagerduty.com/docs/guides/zenoss-5-integration-guide/)
+
+# Build
+
+The project can be build with default `python` tools.
+
+To build project run the following command:
+
+```sh
+python setup.py bdist_egg
+```
+
+The command will create artifact `dist/ZenPacks.PagerDuty.APINotification-${plugin.version}-${py.version}.egg`. `${py.version}` better to be removed for distribution, but it is OK for development and testing
+
+# ZenOss Installation
+
+## Version 4
+
+Installation of ZenOss Core v4 is pretty easy. You need to follow [the guide from this repo](https://github.com/ssvsergeyev/core-autodeploy)
+
+## Version 5
+
+Installation of ZenOss Core v5 is different. ZenOss introduce `Center Controller` which manage all deployments, including ZenOss Core. It uses [docker](https://www.docker.com/) to deploy it. To install and deploy ZenOss you can follow [the blog post](https://www.franken.pro/blog/how-to-install-zenoss-5-on-centos-7). Be sure that you give enough space resources if you deploy it locally for development or testing. The following table shows data that worked for me:
+
+| Function          | Disk Space |
+|-------------------|------------|
+| Docker            | 40 Gb      |
+| Control Center    | 30 Gb      |
+| Core Data         | 20 Gb      |
+| Core Data Backup  | 20 Gb      |
+
+When you are installing docker be sure that ZenOss is compatible with it. To check compatibility versions you may run `yum` as the following:
+
+```sh
+yum --enablerepo=zenoss-stable deplist serviced-${your-version}
+```
+
+You may do the same for `zenoss-core-service`
+
 
 #License
 Copyright (c) 2013, PagerDuty, Inc. <info@pagerduty.com>
